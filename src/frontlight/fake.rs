@@ -1,12 +1,12 @@
 use frontlight::{Frontlight, LightLevels};
-use errors::*;
+use failure::{Error, ResultExt};
 
 
 pub struct FakeFrontlight {
 }
 
 impl FakeFrontlight {
-    pub fn new() -> Result<FakeFrontlight> {
+    pub fn new() -> Result<FakeFrontlight, Error> {
         Ok(FakeFrontlight {
         })
     }

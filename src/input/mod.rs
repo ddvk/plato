@@ -15,7 +15,7 @@ use std::sync::mpsc::{self, Sender, Receiver};
 use std::os::unix::io::AsRawFd;
 use std::ffi::CString;
 use geom::Point;
-use errors::*;
+use failure::{Error, ResultExt};
 
 
 // Event types
@@ -150,12 +150,12 @@ pub fn raw_events(paths: Vec<String>) -> Receiver<InputEvent> {
     rx
 }
 
-pub fn parse_raw_events(paths: &[String], tx: &Sender<InputEvent>) -> Result<()> {
+pub fn parse_raw_events(paths: &[String], tx: &Sender<InputEvent>) -> Result<(), Error> {
     let mut files = Vec::new();
     let mut pfds = Vec::new();
 
     for path in paths.iter() {
-        let file = File::open(path).chain_err(|| "Can't open input file.")?;
+        let file = File::open(path).context("Can't open input file.")?;
         let fd = file.as_raw_fd();
         files.push(file);
         pfds.push(libc::pollfd {

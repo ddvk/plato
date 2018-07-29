@@ -5,7 +5,7 @@ use self::libremarkable::framebuffer::{FramebufferIO, FramebufferRefresh, Frameb
 
 use geom::Rectangle;
 use framebuffer::{UpdateMode, Framebuffer};
-use errors::*;
+use failure::{Error, ResultExt};
 
 use self::libremarkable::framebuffer::common::*;
 use self::libremarkable::framebuffer::refresh::PartialRefreshMode;
@@ -46,7 +46,7 @@ impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
         println!("invert_region");
     }
 
-    fn update(&mut self, rect: &Rectangle, mode: UpdateMode) -> Result<u32> {
+    fn update(&mut self, rect: &Rectangle, mode: UpdateMode) -> Result<u32, Error> {
 //        println!("update (mode {:?})",  mode);
 
         let rm_mxcfb_rect = mxcfb_rect {
@@ -85,13 +85,13 @@ impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
 //        println!("update completed -> {}", token);
         Ok(token)
     }
-    fn wait(&mut self, token: u32) -> Result<i32> {
+    fn wait(&mut self, token: u32) -> Result<i32, Error> {
 //        println!("wait token {}", token);
         let res = self.fb.wait_refresh_complete(token) as i32;
 //        println!("wait completed -> {}\n", res);
         Ok(res)
     }
-    fn save(&self, path: &str) -> Result<()> {
+    fn save(&self, path: &str) -> Result<(), Error> {
 //        println!("save {}", path);
         Ok(())
     }
@@ -113,7 +113,7 @@ impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
 }
 
 impl<'a> RemarkableFramebuffer <'a> {
-    pub fn new()  -> Result<RemarkableFramebuffer<'static>>  {
+    pub fn new()  -> Result<RemarkableFramebuffer<'static>, Error>  {
         let framebuffer = remarkable_fb::core::Framebuffer::new("/dev/fb0");
         Ok(RemarkableFramebuffer {
              fb: framebuffer
