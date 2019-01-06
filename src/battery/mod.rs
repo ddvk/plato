@@ -2,7 +2,7 @@ mod kobo;
 mod fake;
 mod remarkable;
 
-use errors::*;
+use failure::Error;
 
 pub use self::kobo::KoboBattery;
 pub use self::fake::FakeBattery;
@@ -18,6 +18,6 @@ pub enum Status {
 }
 
 pub trait Battery {
-    fn capacity(&mut self) -> Result<f32>;
-    fn status(&mut self) -> Result<Status>;
+    fn capacity(&mut self) -> Result<f32, Error>;
+    fn status(&mut self) -> Result<Status, Error>;
 }

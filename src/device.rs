@@ -8,7 +8,7 @@ use gesture::gesture_events;
 use view::Event;
 use std::sync::mpsc::{self, Sender, Receiver};
 use battery::{Battery, KoboBattery, RemarkableBattery};
-use errors::*;
+use failure::{ResultExt};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Model {
@@ -81,8 +81,8 @@ impl Device {
 
     pub fn create_battery(&self) -> Box<Battery> {
         match self.model {
-            Model::Remarkable  => Box::new(RemarkableBattery::new().chain_err(|| "Can't create battery.").unwrap()) as Box<Battery>,
-            _                  => Box::new(KoboBattery::new().chain_err(|| "Can't create battery.").unwrap()) as Box<Battery>,
+            Model::Remarkable  => Box::new(RemarkableBattery::new().context("Can't create battery.").unwrap()) as Box<Battery>,
+            _                  => Box::new(KoboBattery::new().context("Can't create battery.").unwrap()) as Box<Battery>,
         }
     }
 

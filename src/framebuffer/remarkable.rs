@@ -5,7 +5,7 @@ use self::libremarkable::framebuffer::{FramebufferIO, FramebufferRefresh, Frameb
 
 use geom::Rectangle;
 use framebuffer::{UpdateMode, Framebuffer};
-use errors::*;
+use failure::{Error, ResultExt};
 
 use self::libremarkable::framebuffer::common::*;
 use self::libremarkable::framebuffer::refresh::PartialRefreshMode;
@@ -20,7 +20,7 @@ pub struct RemarkableFramebuffer<'a>  {
 impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
     fn set_pixel(&mut self, x: u32, y: u32, color: u8) {
 //        print!("-set_pixel {} {} {}\n", x, y, color);
-        self.fb.write_pixel(y as usize, x as usize, color::NATIVE_COMPONENTS(color,color,color,color));
+        self.fb.write_pixel(y as usize, x as usize, color::GRAY(255 - color));
     }
 
     fn set_blended_pixel(&mut self, x: u32, y: u32, color: u8, alpha: f32) {
@@ -28,17 +28,15 @@ impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
             self.set_pixel(x, y, color);
             return;
         }
-        let dst_color = self.fb.read_pixel(y as usize, x as usize);
-        let dst_color = dst_color.as_native();
+        let dst_color = self.fb.read_pixel(y as usize, x as usize).to_rgb8();
         let (dst_r, dst_g, dst_b) = (dst_color[0], dst_color[1], dst_color[2]);
         let src_alpha = color as f32 * alpha;
         let r = src_alpha + (1.0 - alpha) * dst_r as f32;
         let g = src_alpha + (1.0 - alpha) * dst_g as f32;
         let b = src_alpha + (1.0 - alpha) * dst_b as f32;
-        let a = (r+g+b)/3.0;
         //we ignoring alpha of pixel read
 //        print!("setting blended color: dst: {} {} {}  src: {}   res: {} {} {} {} \n" , dst_r, dst_g, dst_b, src_alpha, r, g, b, a);
-        self.fb.write_pixel(y as usize, x as usize, color::NATIVE_COMPONENTS(r as u8, b as u8, g as u8, a as u8));
+        self.fb.write_pixel(y as usize, x as usize, color::RGB(r as u8, b as u8, g as u8));
     }
 
 
@@ -46,7 +44,7 @@ impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
         println!("invert_region");
     }
 
-    fn update(&mut self, rect: &Rectangle, mode: UpdateMode) -> Result<u32> {
+    fn update(&mut self, rect: &Rectangle, mode: UpdateMode) -> Result<u32, Error> {
 //        println!("update (mode {:?})",  mode);
 
         let rm_mxcfb_rect = mxcfb_rect {
@@ -85,13 +83,13 @@ impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
 //        println!("update completed -> {}", token);
         Ok(token)
     }
-    fn wait(&mut self, token: u32) -> Result<i32> {
+    fn wait(&mut self, token: u32) -> Result<i32, Error> {
 //        println!("wait token {}", token);
         let res = self.fb.wait_refresh_complete(token) as i32;
 //        println!("wait completed -> {}\n", res);
         Ok(res)
     }
-    fn save(&self, path: &str) -> Result<()> {
+    fn save(&self, path: &str) -> Result<(), Error> {
 //        println!("save {}", path);
         Ok(())
     }
@@ -113,7 +111,7 @@ impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
 }
 
 impl<'a> RemarkableFramebuffer <'a> {
-    pub fn new()  -> Result<RemarkableFramebuffer<'static>>  {
+    pub fn new()  -> Result<RemarkableFramebuffer<'static>, Error>  {
         let framebuffer = remarkable_fb::core::Framebuffer::new("/dev/fb0");
         Ok(RemarkableFramebuffer {
              fb: framebuffer
