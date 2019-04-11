@@ -25,7 +25,7 @@ lazy_static! {
                      "delete-backward", "delete-forward", "move-backward", "move-forward",
                      "close",  "check_mark-small", "check_mark","check_mark-large",
                      "bullet", "arrow-left", "arrow-right", "double_angle-left", "double_angle-right",
-                     "angle-down", "plus", "minus", "crop", "toc", "font_size", "plug"].iter().cloned() {
+                     "angle-down", "plus", "minus", "crop", "toc", "font_size", "plug","reload"].iter().cloned() {
             let path = dir.join(&format!("{}.svg", name));
             let doc = PdfOpener::new().and_then(|o| o.open(path)).unwrap();
             let pixmap = doc.page(0).and_then(|p| p.pixmap(scale)).unwrap();

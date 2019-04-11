@@ -1,5 +1,5 @@
 use frontlight::{Frontlight, LightLevels};
-use failure::{Error, ResultExt};
+use failure::{Error};
 
 
 pub struct FakeFrontlight {

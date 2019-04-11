@@ -34,6 +34,7 @@ pub struct ImportSettings {
 pub struct ReaderSettings {
     pub refresh_every: u8,
     pub finished: FinishedAction,
+    pub sleep: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,6 +49,7 @@ impl Default for ReaderSettings {
         ReaderSettings {
             refresh_every: 0,
             finished: FinishedAction::Notify,
+            sleep: 60,
         }
     }
 }

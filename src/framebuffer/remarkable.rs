@@ -5,10 +5,11 @@ use self::libremarkable::framebuffer::{FramebufferIO, FramebufferRefresh, Frameb
 
 use geom::Rectangle;
 use framebuffer::{UpdateMode, Framebuffer};
-use failure::{Error, ResultExt};
+use failure::{Error};
 
 use self::libremarkable::framebuffer::common::*;
 use self::libremarkable::framebuffer::refresh::PartialRefreshMode;
+use self::libremarkable::framebuffer::cgmath::*;
 
 
 pub struct RemarkableFramebuffer<'a>  {
@@ -20,7 +21,9 @@ pub struct RemarkableFramebuffer<'a>  {
 impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
     fn set_pixel(&mut self, x: u32, y: u32, color: u8) {
 //        print!("-set_pixel {} {} {}\n", x, y, color);
-        self.fb.write_pixel(y as usize, x as usize, color::GRAY(255 - color));
+//        
+        self.fb.write_pixel(Point2 {x: (x as i32), y: (y as i32)}, color::GRAY(255 - color));
+
     }
 
     fn set_blended_pixel(&mut self, x: u32, y: u32, color: u8, alpha: f32) {
@@ -28,7 +31,7 @@ impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
             self.set_pixel(x, y, color);
             return;
         }
-        let dst_color = self.fb.read_pixel(y as usize, x as usize).to_rgb8();
+        let dst_color = self.fb.read_pixel(Point2{y: (y as u32) , x: (x as u32)} ).to_rgb8();
         let (dst_r, dst_g, dst_b) = (dst_color[0], dst_color[1], dst_color[2]);
         let src_alpha = color as f32 * alpha;
         let r = src_alpha + (1.0 - alpha) * dst_r as f32;
@@ -36,7 +39,7 @@ impl<'a> Framebuffer for RemarkableFramebuffer<'a> {
         let b = src_alpha + (1.0 - alpha) * dst_b as f32;
         //we ignoring alpha of pixel read
 //        print!("setting blended color: dst: {} {} {}  src: {}   res: {} {} {} {} \n" , dst_r, dst_g, dst_b, src_alpha, r, g, b, a);
-        self.fb.write_pixel(y as usize, x as usize, color::RGB(r as u8, b as u8, g as u8));
+        self.fb.write_pixel(Point2 {x: (x as i32), y: (y as i32)} , color::RGB(r as u8, b as u8, g as u8));
     }
 
 

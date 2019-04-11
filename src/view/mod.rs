@@ -239,6 +239,14 @@ pub enum Event {
     Reseed,
     Back,
     Quit,
+    Reload,
+    PrepareForSleep(SleepType),
+    Wake
+}
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum  SleepType {
+    Light,
+    Deep
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

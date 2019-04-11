@@ -185,6 +185,7 @@ impl Reader {
         let (pixmap, scale) = build_pixmap(&rect, &doc, current_page, &Margin::default());
         let pixmap = Rc::new(pixmap);
         let frame = rect![0, 0, pixmap.width, pixmap.height];
+        println!("pixmap");
 
         hub.send(Event::Render(rect, UpdateMode::Partial)).unwrap();
 
@@ -376,12 +377,16 @@ impl Reader {
         } else {
             UpdateMode::Partial
         };
+        let start = std::time::Instant::now();
         let margin = self.info.reader.as_ref()
                          .and_then(|r| r.cropping_margins.as_ref()
                                         .map(|c| c.margin(self.current_page)))
                          .cloned().unwrap_or_default();
         let doc = self.doc.lock().unwrap();
         let (pixmap, scale) = build_pixmap(&self.rect, doc.as_ref(), self.current_page, &margin);
+       
+        let duration = start.elapsed();
+        println!("rendered in {}", duration.as_millis());
         self.pixmap = Rc::new(pixmap);
         let frame = rect![(margin.left * self.pixmap.width as f32).ceil() as i32,
                           (margin.top * self.pixmap.height as f32).ceil() as i32,
@@ -1003,6 +1008,11 @@ impl Reader {
         hub.send(Event::Render(self.rect, UpdateMode::Gui)).unwrap();
     }
 
+    fn exit(&mut self, hub: &Hub, context: &mut Context){
+        self.quit(context);
+        hub.send(Event::Back).unwrap();
+    }
+
     fn quit(&mut self, context: &mut Context) {
         if let Some(ref mut s) = self.search {
             s.running.store(false, Ordering::Relaxed);
@@ -1030,10 +1040,11 @@ impl Reader {
 impl View for Reader {
     fn handle_event(&mut self, evt: &Event, hub: &Hub, _bus: &mut Bus, context: &mut Context) -> bool {
         match *evt {
-            Event::Device(DeviceEvent::Button { code: code, status: ButtonStatus::Released, ..}) => {
+            Event::Device(DeviceEvent::Button { code, status: ButtonStatus::Released, ..}) => {
                 match code {
                     ButtonCode::Right => self.set_current_page(CycleDir::Next, hub, context),
                     ButtonCode::Left => self.set_current_page(CycleDir::Previous, hub, context),
+                    ButtonCode::Home => self.exit(hub, context),                      
                     _ => (),
                 };
                 true
@@ -1088,8 +1099,8 @@ impl View for Reader {
                 }
 
                 let w = self.rect.width() as i32;
-                let x1 = self.rect.min.x + w / 3;
-                let x2 = self.rect.max.x - w / 3;
+                let x1 = self.rect.min.x + w / 5;
+                let x2 = self.rect.max.x - w / 5;
 
                 if center.x < x1 {
                     let dx = x1 - center.x;
@@ -1120,14 +1131,7 @@ impl View for Reader {
                     // Top right corner.
                     if center.y < self.rect.min.y + dx {
                         self.add_remove_bookmark(hub);
-                    // Bottom right corner.
-                    } else if center.y > self.rect.max.y - dx {
-                        if self.search.is_none() {
-                            hub.send(Event::Toggle(ViewId::GoToPage)).unwrap();
-                        } else {
-                            self.set_current_page(CycleDir::Next, hub, context);
-                        }
-                    // Right ear.
+                    // Right ear 
                     } else {
                         if self.search.is_none() {
                             self.set_current_page(CycleDir::Next, hub, context);
@@ -1438,6 +1442,7 @@ impl View for Reader {
         let dx = (self.rect.width() - self.frame.width()) as i32 / 2;
         let dy = (self.rect.height() - self.frame.height()) as i32 / 2;
 
+        println!("draw pixmap");
         fb.draw_rectangle(&self.rect, WHITE);
         fb.draw_framed_pixmap(&self.pixmap, &self.frame, &pt!(dx, dy));
 

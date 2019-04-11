@@ -37,7 +37,7 @@ glob = "0.2.11"
 rand = "0.4.2"
 crockford = "1.0.1"
 toml = "0.4.6"
-libremarkable = "0.3.2"
+libremarkable = { git ="https://github.com/ddvk/libremarkable"}
 
 [dependencies.html-entities]
 version = "0.1.0"

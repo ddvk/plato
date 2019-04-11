@@ -48,11 +48,11 @@ impl TopBar {
         children.push(Box::new(battery_widget) as Box<View>);
 
         let name = if context.settings.frontlight { "frontlight" } else { "frontlight-disabled" };
-        let frontlight_icon = Icon::new(name,
-                                        rect![rect.max - pt!(2*side, side),
-                                              rect.max - pt!(side, 0)],
-                                        Event::Show(ViewId::Frontlight));
-        children.push(Box::new(frontlight_icon) as Box<View>);
+        // let frontlight_icon = Icon::new(name,
+        //                                 rect![rect.max - pt!(2*side, side),
+        //                                       rect.max - pt!(side, 0)],
+        //                                 Event::Show(ViewId::Frontlight));
+        // children.push(Box::new(frontlight_icon) as Box<View>);
 
         let menu_rect = rect![rect.max-side, rect.max];
         let menu_icon = Icon::new("menu",

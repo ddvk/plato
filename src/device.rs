@@ -1,14 +1,14 @@
 extern crate libc;
-use std::env;
 use std::fmt;
 use std::collections::HashMap;
 use unit::scale_by_dpi;
 use input::{DeviceEvent, TouchProto, InputEvent, raw_events, device_events, remarkable_parse_device_events, kobo_parse_device_events};
 use gesture::gesture_events;
 use view::Event;
-use std::sync::mpsc::{self, Sender, Receiver};
+use std::sync::mpsc::{Sender, Receiver};
 use battery::{Battery, KoboBattery, RemarkableBattery};
 use failure::{ResultExt};
+use framebuffer::{Framebuffer, RemarkableFramebuffer, KoboFramebuffer};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Model {
@@ -86,19 +86,30 @@ impl Device {
         }
     }
 
-    pub fn create_touchscreen(&self, screen_size: (u32, u32)) -> Receiver<Event> {
+    pub fn create_touchscreen(&self) -> Receiver<Event> {
         return match self.model {
             Model::Remarkable => {
                 let paths = vec!["/dev/input/event1".to_string(), //this is touchscreen
                                             "/dev/input/event2".to_string()]; //this is buttons
-                let touch_screen = gesture_events(device_events(raw_events(paths), screen_size));
+                let touch_screen = gesture_events(device_events(raw_events(paths), self.dims));
                 touch_screen
             },
             _ => {
                 let paths = vec!["/dev/input/event0".to_string(),
                                             "/dev/input/event1".to_string()];
-                let touch_screen = gesture_events(device_events(raw_events(paths), screen_size));
+                let touch_screen = gesture_events(device_events(raw_events(paths), self.dims));
                 touch_screen
+            }
+        }
+    }
+
+    pub fn create_framebuffer(&self) -> Box<dyn Framebuffer> {
+        return match self.model {
+            Model::Remarkable => {
+                Box::new(RemarkableFramebuffer::new().unwrap())
+            },
+            _ => {
+                Box::new(KoboFramebuffer::new("/dev/fb0").unwrap())
             }
         }
     }

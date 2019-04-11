@@ -15,3 +15,6 @@
 plato\.iml
 
 \.idea/
+rusty-tags.vi
+dist64/
+libs64/

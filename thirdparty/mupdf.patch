@@ -1,0 +1,59 @@
+diff --git a/Makefile b/Makefile
+index b3a2c5ae..a0fe0d4d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -20,7 +20,7 @@ include Makethird
+ # Do not specify CFLAGS or LIBS on the make invocation line - specify
+ # XCFLAGS or XLIBS instead. Make ignores any lines in the makefile that
+ # set a variable that was set on the command line.
+-CFLAGS += $(XCFLAGS) -Iinclude
++CFLAGS += $(XCFLAGS) -Iinclude -fPIC
+ LIBS += $(XLIBS) -lm
+ 
+ ifneq ($(threading),no)
+@@ -39,6 +39,7 @@ endif
+ 
+ ifneq ($(verbose),yes)
+   QUIET_AR = @ echo "    AR $@" ;
++  QUIET_SO = @ echo "    SO $@" ;
+   QUIET_RANLIB = @ echo "    RANLIB $@" ;
+   QUIET_CC = @ echo "    CC $@" ;
+   QUIET_CXX = @ echo "    CXX $@" ;
+@@ -54,6 +55,7 @@ MKTGTDIR = mkdir -p $(dir $@)
+ CC_CMD = $(QUIET_CC) $(MKTGTDIR) ; $(CC) $(CFLAGS) -MMD -MP -o $@ -c $<
+ CXX_CMD = $(QUIET_CXX) $(MKTGTDIR) ; $(CXX) $(CFLAGS) -MMD -MP -o $@ -c $<
+ AR_CMD = $(QUIET_AR) $(MKTGTDIR) ; $(AR) cr $@ $^
++SO_CMD = $(QUIET_LINK) $(CC) $(LDFLAGS) -fPIC --shared -Wl,-soname -Wl,`basename $@` $^ -o $@
+ ifdef RANLIB
+   RANLIB_CMD = $(QUIET_RANLIB) $(RANLIB) $@
+ endif
+@@ -68,6 +70,9 @@ $(OUT)/%.a :
+ 	$(AR_CMD)
+ 	$(RANLIB_CMD)
+ 
++$(OUT)/%.so :
++	$(SO_CMD)
++
+ $(OUT)/%.exe: %.c
+ 	$(LINK_CMD)
+ 
+@@ -189,15 +194,18 @@ generate: source/pdf/js/util.js.h
+ 
+ MUPDF_LIB = $(OUT)/libmupdf.a
+ THIRD_LIB = $(OUT)/libmupdf-third.a
++MUPDF_SOLIB = $(OUT)/libmupdf.so
+ THREAD_LIB = $(OUT)/libmupdf-threads.a
+ PKCS7_LIB = $(OUT)/libmupdf-pkcs7.a
+ 
+ $(MUPDF_LIB) : $(MUPDF_OBJ)
++$(MUPDF_SOLIB) : $(MUPDF_OBJ) $(THIRD_OBJ)
+ $(THIRD_LIB) : $(THIRD_OBJ)
++$(THIRD_SOLIB) : $(THIRD_OBJ)
+ $(THREAD_LIB) : $(THREAD_OBJ)
+ $(PKCS7_LIB) : $(PKCS7_OBJ)
+ 
+-INSTALL_LIBS := $(MUPDF_LIB) $(THIRD_LIB)
++INSTALL_LIBS := $(MUPDF_LIB) $(THIRD_LIB) $(MUPDF_SOLIB)
+ 
+ # --- Main tools and viewers ---
+ 
