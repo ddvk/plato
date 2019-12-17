@@ -4,7 +4,7 @@ use std::path::Path;
 use battery::{Battery, Status};
 use failure::{Error, ResultExt};
 
-const BATTERY_INTERFACE: &str = "/sys/class/power_supply/bq27441";
+const BATTERY_INTERFACE: &str = "/sys/class/power_supply/bq27441-0";
 
 const BATTERY_CAPACITY: &str = "capacity";
 const BATTERY_STATUS: &str = "status";
